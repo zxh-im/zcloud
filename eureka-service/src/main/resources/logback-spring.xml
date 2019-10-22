@@ -1,0 +1,106 @@
+<configuration>
+
+  <!-- 读取 server.port、spring.application.name 中的属性 -->
+  <springProperty scope="context" name="port" source="server.port" defaultValue=""/>
+  <springProperty scope="context" name="name" source="spring.application.name" defaultValue="default_name"/>
+
+  <!-- 默认转换规则 -->
+  <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
+  <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" />
+  <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" />
+
+  <!-- 文件日志基础路径 -->
+<!--  <property name="BASE_LOG_PATH" value="/export/logs/gzdsj/${name}"/>-->
+  <property name="BASE_LOG_PATH" value="logs"/>
+  <!-- 默认 控制台日志、文件日志 -->
+  <property name="CONSOLE_LOG_PATTERN" value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"/>
+  <property name="FILE_LOG_PATTERN"    value="${FILE_LOG_PATTERN:-%d{yyyy-MM-dd HH:mm:ss.SSS} ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } --- [%t] %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"/>
+
+  <!-- 自定义 控制台日志 -->
+  <property name="CUSTOM_CONSOLE_LOG_PATTERN" value="${port}:%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread%X{sourceThread}]%logger{24} - %msg%n"/>
+  <property name="CUSTOM_FILE_LOG_PATTERN"    value="${port}:%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level ${version} [%thread]%logger{16} - %msg%n"/>
+  <property name="CUSTOM_FILE_ERROR_LOG_PATTERN" value="${port}:%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} -%msg%n"/>
+
+  <!-- 控制台日志 -->
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+  <!-- 文件日志 -->
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${BASE_LOG_PATH}/log.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${BASE_LOG_PATH}/log.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+      <maxHistory>7</maxHistory>
+    </rollingPolicy>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <pattern>${CUSTOM_FILE_LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+  <!-- 错误日志 -->
+  <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>ERROR</level>
+    </filter>
+    <File>${BASE_LOG_PATH}/error.log</File>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${BASE_LOG_PATH}/error-%d{yyyyMMdd}.log.%i
+      </fileNamePattern>
+      <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+        <maxFileSize>500MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
+      <maxHistory>2</maxHistory>
+    </rollingPolicy>
+    <layout class="ch.qos.logback.classic.PatternLayout">
+      <Pattern>${CUSTOM_FILE_ERROR_LOG_PATTERN}</Pattern>
+    </layout>
+  </appender>
+
+  <!-- 数据库SQL日志 -->
+  <appender name="SQL" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${BASE_LOG_PATH}/sql.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${BASE_LOG_PATH}/sql.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+      <maxHistory>7</maxHistory>
+    </rollingPolicy>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <pattern>${CUSTOM_FILE_LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+
+  <!-- 数据库SQL语句日志配置 org.hibernate.SQL: debug org.hibernate.type.descriptor.sql: TRACE -->
+  <logger name="org.hibernate.SQL" level="debug">
+    <appender-ref ref="SQL"/>
+  </logger>
+  <logger name="org.hibernate.type.descriptor.sql" level="trace">
+    <appender-ref ref="SQL"/>
+  </logger>
+
+  <!-- 开发环境日志级别为DEBUG -->
+  <springProfile name="dev">
+    <logger name="com.cpt" level="debug"/>
+    <logger name="org.springframework.web.servlet.mvc" level="info"/>
+    <root level="info">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+      <appender-ref ref="ERROR_FILE"/>
+      <!--<appender-ref ref="SQL"/>-->
+    </root>
+  </springProfile>
+  <!-- 其他环境日志级别为INFO -->
+  <springProfile name="!dev">
+    <logger name="com.cpt" level="info"/>
+    <logger name="org.springframework.web.servlet.mvc" level="info"/>
+    <root level="info">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+      <appender-ref ref="ERROR_FILE"/>
+      <!--<appender-ref ref="SQL"/>-->
+    </root>
+  </springProfile>
+
+</configuration>
