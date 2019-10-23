@@ -9,3 +9,13 @@ eureka:
   client:
     service-url:
       defaultZone: http://127.0.0.1:8761/eureka/
+
+#微服务相关
+# service.xxx.name: # 微服务访问前缀
+# service.xxx.name: # 内部通过网关配置 生产模式调整为网关
+# service.xxx.url:  # 默认为"":通过注册中心获取调用地址  调试时可手动指定@FeignClient调用的地址
+service:
+  client:
+    prefix: /client1
+    name: client1
+    url:
